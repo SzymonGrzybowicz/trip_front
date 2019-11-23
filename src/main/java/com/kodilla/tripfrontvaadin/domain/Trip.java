@@ -25,6 +25,7 @@ public class Trip {
     @JsonProperty("id")
     private Long id;
 
+    @Setter
     @JsonProperty("localizations")
     private List<Localization> localizations;
 
@@ -34,10 +35,12 @@ public class Trip {
     @Setter
     private String to;
 
+    @Setter
     @JsonProperty("date")
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private Date date;
 
+    @Setter
     @JsonProperty("distance")
     private double distance;
 

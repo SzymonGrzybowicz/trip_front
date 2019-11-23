@@ -55,10 +55,9 @@ public class LoginPage extends BasePage {
             Cookie cookie = new Cookie("Auth_key", splited);
             cookie.setMaxAge(-1);
             VaadinService.getCurrentResponse().addCookie(cookie);
-            AdminConfig.isAuthorised = true;
             getUI().ifPresent(ui -> ui.navigate(""));
         } catch (HttpClientErrorException.Unauthorized e) {
-            AdminConfig.isAuthorised = false;
+            cookieService.removeCookie();
             Notification.show("Bad credentials", 5000, Notification.Position.MIDDLE);
         }
     }

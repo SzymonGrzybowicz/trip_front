@@ -18,6 +18,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -46,6 +47,7 @@ public class CreateTripPage extends BasePage {
         });
         Button confirm = new Button("Confirm", e-> confirmCreations());
         Button clear = new Button("Clear", e -> clear());
+        date.setMin(LocalDate.now().plusDays(1));
         add(fromSearchBox, toSearchBox, distance, date);
         add(time, clear, confirm);
     }
@@ -60,7 +62,7 @@ public class CreateTripPage extends BasePage {
                 restTemplate.exchange(uri, HttpMethod.POST, entity1, String.class);
                 getUI().ifPresent(ui -> ui.navigate("trips"));
             }catch (HttpClientErrorException.Forbidden e){
-                AdminConfig.isAuthorised = false;
+                cookieService.removeCookie();
             }
         }
     }
@@ -91,7 +93,7 @@ public class CreateTripPage extends BasePage {
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, cookieService.getEntityWithLogin(), String.class);
             return response.getBody();
         } catch (HttpClientErrorException.Unauthorized e) {
-            AdminConfig.isAuthorised = false;
+            cookieService.removeCookie();
             getUI().ifPresent(ui -> ui.navigate("login"));
         }
         return "";
@@ -118,5 +120,4 @@ public class CreateTripPage extends BasePage {
     private GoogleSearchBox toSearchBox = new GoogleSearchBox("To:");
     private DatePicker date = new DatePicker("Date");
     private TimePicker time = new TimePicker("Time");
-    private CookieService cookieService = new CookieService();
 }

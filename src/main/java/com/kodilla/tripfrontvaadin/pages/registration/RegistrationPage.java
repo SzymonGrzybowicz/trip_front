@@ -3,6 +3,7 @@ package com.kodilla.tripfrontvaadin.pages.registration;
 import com.kodilla.tripfrontvaadin.AdminConfig;
 import com.kodilla.tripfrontvaadin.base.BasePage;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.html.Label;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.textfield.EmailField;
 import com.vaadin.flow.component.textfield.PasswordField;
@@ -25,6 +26,8 @@ public class RegistrationPage extends BasePage {
     }
 
     private void prepareView() {
+        Label label = new Label("Register.");
+        add(label);
         Button confirmBtn = new Button("Confirm", e -> confirmRegistration());
         passwordField.setMinLength(8);
         passwordField.setErrorMessage("Min lenght: 8");

@@ -8,5 +8,4 @@ import org.springframework.stereotype.Component;
 public class AdminConfig {
 
     private String apiAddress = "http://localhost:8081";
-    public static boolean isAuthorised = false;
 }

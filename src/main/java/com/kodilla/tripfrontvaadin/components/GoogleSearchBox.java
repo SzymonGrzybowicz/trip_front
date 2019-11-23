@@ -1,7 +1,6 @@
 package com.kodilla.tripfrontvaadin.components;
 
 import com.kodilla.tripfrontvaadin.AdminConfig;
-import com.kodilla.tripfrontvaadin.base.EnableChangeListener;
 import com.kodilla.tripfrontvaadin.domain.Localization;
 import com.kodilla.tripfrontvaadin.service.CookieService;
 import com.vaadin.flow.component.listbox.ListBox;
@@ -85,6 +84,7 @@ public class GoogleSearchBox extends HorizontalLayout {
     public void clear() {
         selectedLocalization = null;
         localizations = null;
+        textField.setEnabled(true);
         textField.clear();
         propositions.clear();
     }

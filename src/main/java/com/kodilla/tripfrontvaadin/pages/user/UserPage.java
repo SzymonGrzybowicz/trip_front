@@ -1,14 +1,9 @@
 package com.kodilla.tripfrontvaadin.pages.user;
 
-import com.kodilla.tripfrontvaadin.AdminConfig;
 import com.kodilla.tripfrontvaadin.base.BasePage;
-import com.kodilla.tripfrontvaadin.domain.Trip;
-import com.kodilla.tripfrontvaadin.exception.NotAuthorizedException;
-import com.kodilla.tripfrontvaadin.service.TripService;
 import com.vaadin.flow.component.button.Button;
-import com.vaadin.flow.component.grid.Grid;
-import com.vaadin.flow.component.html.Label;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.textfield.PasswordField;
 import com.vaadin.flow.router.Route;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.client.HttpClientErrorException;
@@ -25,69 +20,71 @@ public class UserPage extends BasePage {
     }
 
     private void prepareView() {
-        HorizontalLayout horizontalLayout = new HorizontalLayout();
-        horizontalLayout.setWidth("100%");
-        Button changePasswordBtn = new Button("Change Password", e -> changePassword());
-        horizontalLayout.add(changePasswordBtn);
+        Button changePasswordBtn = new Button("Change Password", e -> showChangePasswordForm());
+        add(changePasswordBtn);
+        currentPasswordTA.setVisible(false);
+        currentPasswordTA.setMinLength(8);
+        newPasswordTA.setErrorMessage("Min length: 8");
+        newPasswordTA.setVisible(false);
+        newPasswordTA.setMinLength(8);
+        newPasswordTA.setErrorMessage("Min length: 8");
+        confirmPasswordChangeBtn.setVisible(false);
+        add(currentPasswordTA);
+        add(newPasswordTA);
+        add(confirmPasswordChangeBtn);
         Button deleteUserBtn = new Button("Delete User", e -> deleteUser());
-        horizontalLayout.add(deleteUserBtn);
-        createdTrip.setColumns("from", "to", "distance", "date", "temperature");
-        createdTrip.addComponentColumn(this::createEditButton);
-        createdTrip.addComponentColumn(this::createDeleteButton);
-        joinedTrip.setColumns("from", "to", "distance", "date", "temperature");
-        joinedTrip.addComponentColumn(this::createDetachButton);
-        Label createdLbl = new Label("Created by me:");
-        Label joinedLbl = new Label("Joined:");
-        add(createdLbl, createdTrip);
-        add(joinedLbl, joinedTrip);
-        refresh();
-    }
-
-    private void refresh(){
-        try {
-            createdTrip.setItems(tripService.getTripCreatedByUser());
-            joinedTrip.setItems(tripService.getTripUserJoined());
-        }catch (NotAuthorizedException e) {
-            getUI().ifPresent(ui -> ui.navigate("login"));
-            AdminConfig.isAuthorised = false;
-        }
+        add(deleteUserBtn);
+        Button myTrips = new Button("My Trips", e -> getUI().ifPresent(ui -> ui.navigate("myTrips")));
+        add(myTrips);
+        Button myEvents = new Button("My Events", e -> getUI().ifPresent(ui -> ui.navigate("myEvents")));
+        add(myEvents);
     }
 
     private void deleteUser() {
-        //todo
-    }
-
-    private void changePassword() {
-        //Todo
-    }
-
-    private Button createEditButton(Trip trip){
-        return new Button("Edit");
-        //TODO
-    }
-
-    private void deleteTrip(Trip trip) {
-        URI uri = UriComponentsBuilder.fromHttpUrl(adminConfig.getApiAddress() + "/trip/" + trip.getId())
+        URI uri = UriComponentsBuilder.fromHttpUrl(adminConfig.getApiAddress() + "/user")
                 .build().encode().toUri();
         try {
             restTemplate.exchange(uri, HttpMethod.DELETE, cookieService.getEntityWithLogin(), String.class);
-            refresh();
-        }catch (HttpClientErrorException.Forbidden e){
-            AdminConfig.isAuthorised = false;
+            cookieService.removeCookie();
+            getUI().ifPresent(ui -> ui.navigate(""));
+        } catch (HttpClientErrorException.Forbidden e) {
+            cookieService.removeCookie();
             getUI().ifPresent(ui -> ui.navigate("login"));
+        } catch (HttpClientErrorException.BadRequest e) {
+            Notification.show("Ooops! Something Wrong. Try Again", 5000, Notification.Position.MIDDLE);
         }
     }
 
-    private Button createDeleteButton(Trip trip) {
-        return new Button("Delete", e -> deleteTrip(trip));
+    private void showChangePasswordForm() {
+        currentPasswordTA.setVisible(true);
+        newPasswordTA.setVisible(true);
+        confirmPasswordChangeBtn.setVisible(true);
     }
 
-    private Button createDetachButton(Trip trip){
-        return new Button("Detach");
-        //TODO
+    private void changePassword() {
+        if (currentPasswordTA.isInvalid() || newPasswordTA.isInvalid()) return;
+        String currentPassword = currentPasswordTA.getValue();
+        String newPassword = newPasswordTA.getValue();
+        URI uri = UriComponentsBuilder.fromHttpUrl(adminConfig.getApiAddress() +
+                "/user/" + newPassword +
+                "/" + currentPassword
+        )
+                .build().encode().toUri();
+        try {
+            restTemplate.exchange(uri, HttpMethod.PUT, cookieService.getEntityWithLogin(), String.class);
+            currentPasswordTA.setVisible(false);
+            newPasswordTA.setVisible(false);
+            confirmPasswordChangeBtn.setVisible(false);
+            Notification.show("OK!", 5000, Notification.Position.MIDDLE);
+        } catch (HttpClientErrorException.Forbidden e) {
+            cookieService.removeCookie();
+            getUI().ifPresent(ui -> ui.navigate("login"));
+        } catch (HttpClientErrorException.BadRequest e) {
+            Notification.show("Current password not match! Try again.", 5000, Notification.Position.MIDDLE);
+        }
     }
 
-    private TripService tripService = new TripService();
-    private Grid<Trip> createdTrip = new Grid<>(Trip.class);
-    private Grid<Trip> joinedTrip = new Grid<>(Trip.class);
+    private PasswordField currentPasswordTA = new PasswordField("Current Password");
+    private PasswordField newPasswordTA = new PasswordField("New Password");
+    private Button confirmPasswordChangeBtn = new Button("Confirm", e -> changePassword());
 }

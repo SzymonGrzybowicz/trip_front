@@ -14,6 +14,7 @@ public class MainPage extends BasePage {
     }
 
     private void createPage() {
-        this.add("Some nice text about My application ;)");
+        this.add("Some nice text about My application ;) \n " +
+                "sometimes after login reload page is necessary"); //todo
     }
 }

@@ -1,6 +1,7 @@
 package com.kodilla.tripfrontvaadin.service;
 
 import com.kodilla.tripfrontvaadin.AdminConfig;
+import com.kodilla.tripfrontvaadin.domain.Localization;
 import com.kodilla.tripfrontvaadin.domain.Trip;
 import com.kodilla.tripfrontvaadin.exception.NotAuthorizedException;
 import org.springframework.http.*;
@@ -10,6 +11,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -35,18 +37,27 @@ public class TripService {
         return sendRequest(uri);
     }
 
+    public List<Trip> getTripsInRadiusOfLocation(Localization selectedLocalization, Long value) throws NotAuthorizedException {
+        URI uri = UriComponentsBuilder.fromHttpUrl(adminConfig.getApiAddress() + "/trip/" +
+                selectedLocalization.getGoogleId() + "/" + value).build().encode().toUri();
+        return sendRequest(uri);
+    }
+
     private List<Trip> sendRequest(URI uri) throws NotAuthorizedException {
         HttpEntity entity = cookieService.getEntityWithLogin();
 
         try{
             ResponseEntity<Trip[]> responseEntity = restTemplate.exchange(uri, HttpMethod.GET, entity,Trip[].class);
             Trip[] response = responseEntity.getBody();
-            for (int i = 0; i < response.length; i++) {
-                response[i].setFrom(response[i].getLocalizations().get(0).getMainDescription() + ", " + response[i].getLocalizations().get(0).getSecondaryDescription());
-                response[i].setTo(response[i].getLocalizations().get(response[i].getLocalizations().size() - 1).getMainDescription()
-                        + ", " +response[i].getLocalizations().get(response[i].getLocalizations().size() - 1).getMainDescription());
+            if (response != null) {
+                for (int i = 0; i < response.length; i++) {
+                    response[i].setFrom(response[i].getLocalizations().get(0).getMainDescription() + ", " + response[i].getLocalizations().get(0).getSecondaryDescription());
+                    response[i].setTo(response[i].getLocalizations().get(response[i].getLocalizations().size() - 1).getMainDescription()
+                            + ", " + response[i].getLocalizations().get(response[i].getLocalizations().size() - 1).getMainDescription());
+                }
+                return Arrays.asList(response);
             }
-            return Arrays.asList(response);
+            return new ArrayList<>();
         } catch (HttpClientErrorException.Forbidden e) {
             throw new NotAuthorizedException();
         }

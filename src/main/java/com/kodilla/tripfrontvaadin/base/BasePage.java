@@ -22,7 +22,7 @@ public abstract class BasePage extends VerticalLayout implements BeforeEnterObse
         if (this instanceof MainPage || this instanceof LoginPage || this instanceof RegistrationPage) {
             return;
         }
-        if (!AdminConfig.isAuthorised) {
+        if (!cookieService.isCookieAdded()) {
             event.forwardTo("login");
         }
     }
